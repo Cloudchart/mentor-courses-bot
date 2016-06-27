@@ -1,0 +1,60 @@
+{
+  "name"    : "main",
+
+  "actions" : [
+    {
+      "label"     : "start",
+      "action"    : "message",
+      "text"      : "Welcome"
+    }, {
+      "action"    : "message",
+      "text"      : "Intro"
+    }, {
+      "label"     : "play",
+      "action"    : "message",
+      "text"      : "Let's play\n\nYou can type /course to start a course\n\nYou can type /start to restart bot."
+    }, {
+      "label"     : "main-halt",
+      "action"    : "halt",
+      "commands"  : {
+        "start"   : "start",
+        "course"  : "course-chooser"
+      }
+    }, {
+      "action"    : "message",
+      "text"      : "I don't understand you.",
+      "next"      : "play"
+    }, {
+      "label"     : "course-chooser",
+      "action"    : "course_chooser",
+      "commands"  : {
+        "cancel"  : "course-chooser-cancel"
+      }
+    }, {
+      "label"     : "course-chooser-cancel",
+      "action"    : "message",
+      "text"      : "Ok, going back to slow loop.",
+      "next"      : "play"
+    }, {
+      "label"     : "card",
+      "action"    : "card",
+      "errors"    : {
+        "unknown_message" : "card-reaction-error",
+        "no_insights_left": "dropout"
+      },
+      "commands"  : {
+        "dropout" : "dropout"
+      }
+    }, {
+      "label"     : "dropout",
+      "action"    : "message",
+      "text"      : "Ok, dropping out.",
+      "next"      : "play"
+    }, {
+      "label"     : "card-reaction-error",
+      "action"    : "message",
+      "text"      : "Say what?",
+      "next"      : "card"
+    }
+  ]
+}

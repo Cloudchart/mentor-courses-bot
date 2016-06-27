@@ -1,0 +1,221 @@
+schema {
+  query: Queries
+  mutation: Mutations
+}
+
+type Course {
+  id: ID!
+  name: String!
+  author: String!
+  isAvailableForViewer: Boolean!
+  insights(after: String, first: Int, before: String, last: Int, filter: CourseInsightsFilter = all): CourseInsightsConnection
+}
+
+type CourseInsightsConnection {
+  pageInfo: PageInfo!
+  edges: [CourseInsightsEdge]
+  positiveCount: Int!
+  negativeCount: Int!
+  totalCount: Int!
+}
+
+type CourseInsightsEdge {
+  node: Insight
+  cursor: String!
+}
+
+enum CourseInsightsFilter {
+  ALL
+  RATED
+  UNRATED
+  POSITIVE
+  NEGATIVE
+}
+
+input CreateUserInput {
+  id: Int!
+  firstName: String!
+  lastName: String
+  username: String
+  clientMutationId: String!
+}
+
+type CreateUserPayload {
+  user: User!
+  clientMutationId: String!
+}
+
+type Insight {
+  id: ID!
+  content: String!
+  author: String!
+  positiveReaction: String
+  negativeReaction: String
+  origin: InsightOrigin!
+  rateByViewer: Int
+}
+
+type InsightOrigin {
+  duration: Int
+  author: String!
+  title: String
+  url: String
+}
+
+type Mutations {
+  pingUser(input: PingUserInput!): PingUserPayload
+  createUser(input: CreateUserInput!): CreateUserPayload
+  updateUserScenario(input: UpdateUserScenarioInput!): UpdateUserScenarioPayload
+  subscribeUserToCourse(input: SubscribeUserToCourseInput!): SubscribeUserToCoursePayload
+  unsubscribeUserFromCourse(input: UnsubscribeUserFromCourseInput!): UnsubscribeUserFromCoursePayload
+  setPendingMessageToUser(input: SetPendingMessageToUserInput!): SetPendingMessageToUserPayload
+  removeUserPendingMessage(input: RemoveUserPendingMessageInput!): RemoveUserPendingMessagePayload
+  rateInsight(input: RateInsightInput!): RateInsightPayload
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type PendingMessage {
+  id: ID!
+  sourceID: String!
+  sourceType: String!
+}
+
+input PingUserInput {
+  clientMutationId: String!
+}
+
+type PingUserPayload {
+  user: User!
+  clientMutationId: String!
+}
+
+type Queries {
+  viewer: User
+  insight(id: ID!): Insight
+}
+
+input RateInsightInput {
+  id: ID!
+  rate: Int!
+  clientMutationId: String!
+}
+
+type RateInsightPayload {
+  insight: Insight!
+  user: User!
+  clientMutationId: String!
+}
+
+input RemoveUserPendingMessageInput {
+  clientMutationId: String!
+}
+
+type RemoveUserPendingMessagePayload {
+  user: User!
+  clientMutationId: String!
+}
+
+type Scenario {
+  name: String!
+  scene: Scene
+}
+
+type Scene {
+  name: String!
+}
+
+input SetPendingMessageToUserInput {
+  id: ID!
+  sourceID: String!
+  sourceType: String!
+  clientMutationId: String!
+}
+
+type SetPendingMessageToUserPayload {
+  user: User!
+  clientMutationId: String!
+}
+
+input SubscribeUserToCourseInput {
+  courseID: ID!
+  clientMutationId: String!
+}
+
+type SubscribeUserToCoursePayload {
+  user: User!
+  clientMutationId: String!
+}
+
+input UnsubscribeUserFromCourseInput {
+  clientMutationId: String!
+}
+
+type UnsubscribeUserFromCoursePayload {
+  user: User!
+  clientMutationId: String!
+}
+
+input UpdateUserScenarioInput {
+  scenarioName: String
+  sceneName: String
+  clientMutationId: String!
+}
+
+type UpdateUserScenarioPayload {
+  user: User!
+  clientMutationId: String!
+}
+
+type User {
+  id: ID!
+  firstName: String!
+  lastName: String
+  username: String
+  scenario: Scenario
+  lastPingAt: Int
+  course: Course
+  courses(after: String, first: Int, before: String, last: Int, filter: UserCoursesFilter = all): UserCoursesConnection
+  insights(after: String, first: Int, before: String, last: Int, filter: UserInsightsFilter = unrated): UserInsightsConnection
+  pendingMessage: PendingMessage
+}
+
+type UserCoursesConnection {
+  pageInfo: PageInfo!
+  edges: [UserCoursesEdge]
+}
+
+type UserCoursesEdge {
+  node: Course
+  cursor: String!
+}
+
+enum UserCoursesFilter {
+  ALL
+  ACTIVE
+  AVAILABLE
+  SAVED
+}
+
+type UserInsightsConnection {
+  pageInfo: PageInfo!
+  edges: [UserInsightsEdge]
+}
+
+type UserInsightsEdge {
+  node: Insight
+  cursor: String!
+}
+
+enum UserInsightsFilter {
+  RATED
+  UNRATED
+  RANDOM
+  FAKE_USEFUL
+  FAKE_USELESS
+}
