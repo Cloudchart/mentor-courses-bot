@@ -50,7 +50,7 @@ export default mutationWithClientMutationId({
       id,
       first_name  : firstName,
       last_name   : lastName,
-      username
+      username    : username || null
     })
     return { user }
   }
