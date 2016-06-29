@@ -1,7 +1,6 @@
 import Immutable from 'immutable'
 
 import Relay from '../relay'
-import telegram from '../telegram'
 
 import {
   insightText,
@@ -55,15 +54,16 @@ let createUser = (id, attributes) =>
 
 class User {
 
-  static async ensure(id, attributes) {
+  static async ensure(bot, id, attributes) {
     let user = await loadUser(id)
     if (!user)
       user = await createUser(id, attributes)
-    return new User(id, user)
+    return new User(bot, id, user)
   }
 
 
-  constructor(id, props) {
+  constructor(bot, id, props) {
+    this.bot = bot
     this.id = id
     this.props = props
     this.attributes = Immutable.fromJS(props)
@@ -158,7 +158,7 @@ class User {
 
     let reply_markup = resolveReplyMarkup(options)
 
-    return telegram.sendMessage({
+    return this.bot.sendMessage({
       chat_id       : this.id,
       text          : text.trim().replace(/\n[ \t]+/g, '\n'),
       parse_mode    : 'Markdown',
@@ -169,7 +169,7 @@ class User {
   async editMessageText(text, message_id, options = {}) {
     let reply_markup = resolveReplyMarkup(options)
 
-    return telegram.editMessageText({
+    return this.bot.editMessageText({
       chat_id     : this.id,
       message_id  : message_id,
       text        : text.trim().replace(/\n[ \t]+/g, '\n'),
@@ -181,7 +181,7 @@ class User {
   async editMessageReplyMarkup(message_id, options = {}) {
     let reply_markup = resolveReplyMarkup(options)
 
-    return telegram.editMessageReplyMarkup({
+    return this.bot.editMessageReplyMarkup({
       chat_id     : this.id,
       message_id  : message_id,
       parse_mode  : 'Markdown',

@@ -19,9 +19,9 @@ let resolveBotCommand = (message) => {
 }
 
 
-let resolve = (message) => {
+let resolve = (bot, { message }) => {
   let { command, text } = resolveBotCommand(message)
-  Factory.resolve({
+  Factory.resolve(bot, {
     type      : 'message',
     from      : message.from,
     command   : command,

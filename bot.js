@@ -2,30 +2,24 @@ import telegram from './telegram'
 
 import {
   message as messageHandler,
-  callback_query as callbackQueryHandler
 } from './handlers'
 
-import warden from './warden'
 
-
-telegram.on('message', async (message) => {
+telegram.on('message', async (bot, update) => {
   try {
-    await messageHandler.resolve(message)
+    await messageHandler.resolve(bot, update)
   } catch(error) {
     console.error('Bot on message error:', error)
   }
 })
 
-
-telegram.on('callback_query', async (callback_query) => {
+telegram.on('callback_query', async (bot, update) => {
   try {
-    await callbackQueryHandler.resolve(callback_query)
+    await callbackQueryHandler.resolve(bot, update)
   } catch(error) {
     console.error('Bot on callback query error:', error)
   }
 })
 
 
-telegram.getUpdates()
-
-warden.start()
+telegram.start()

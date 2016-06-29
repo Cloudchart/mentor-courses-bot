@@ -6,8 +6,8 @@ import { resolve as resolveScenario } from '../scenarios'
 let locks = {}
 
 
-let resolve = async (payload) => {
-  let user = await User.ensure(payload.from.id, payload.from)
+let resolve = async (bot, payload) => {
+  let user = await User.ensure(bot, payload.from.id, payload.from)
 
   if (locks[user.id]) return
   locks[user.id] = true
