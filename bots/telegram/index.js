@@ -96,7 +96,7 @@ const start = async () => {
 
     await run(
       r.table('bots').filter(bot => bot('type').eq('telegram'))('id')
-    ).then(cursor => cursor.next()).then(start_bot).catch(console.error)
+    ).then(cursor => cursor.each(start_bot)).catch(error => null)
 
     Subscriber.subscribe('telegram')
     Subscriber.on('message', handleUpdates)

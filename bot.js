@@ -29,7 +29,7 @@ messenger.start()
 //
 telegram.on('message', async ({ bot, user, payload }) => {
   console.log('Handling telegram payload of type "message".')
-  await bot.sendTextMessage(user, 'Echo: message received').catch(error => console.error(error))
+  await bot.sendTextMessage(user, 'Echo: message received')
 })
 
 // Telegram callback query handler

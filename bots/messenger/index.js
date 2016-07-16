@@ -30,7 +30,7 @@ const handleUpdate = async ({ id, bot, ...update }) => {
     return
   }
 
-  bot_instance = await Bot.get(bot.id).catch(error => null)
+  let bot_instance = await Bot.get(bot.id)
   if (!bot_instance) {
     console.log(`Messenger bot error: cannot find bot with id '${bot.id}'.`)
     return
@@ -73,7 +73,11 @@ const handleUpdates = async (channel, message) => {
 
   locked = true
 
-  await Promise.all(updates.map(handleUpdate))
+  try {
+    await Promise.all(updates.map(handleUpdate))
+  } catch(error) {
+    console.error(error)
+  }
 
   await run(
     r.table('updates').getAll(...updates.map(({ id }) => id)).delete()
