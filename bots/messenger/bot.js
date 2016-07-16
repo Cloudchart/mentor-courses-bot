@@ -68,6 +68,12 @@ class Bot {
       },
     })
       .then(response => response.json())
+      .then(response => {
+        if (response.error)
+          throw response.error
+        else
+          return response
+      })
       .catch(error => {
         if (error instanceof Error)
           throw error

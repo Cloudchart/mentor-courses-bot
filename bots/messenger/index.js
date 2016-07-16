@@ -19,6 +19,17 @@ const handleUpdate = async ({ id, bot, ...update }) => {
   let { sender, recipient } = update
   let event_type = EventTypes.find(event_type => update.hasOwnProperty(event_type))
 
+  if (event_type === null || event_type === undefined) {
+    console.log('Messenger bot: skipping unknown update:')
+    console.log(JSON.stringify(update, null, 2))
+    return
+  }
+
+  if (event_type === 'message' && update.message.is_echo === true) {
+    console.log('Messenger bot: skipping update of message echo type.')
+    return
+  }
+
   bot = await Bot.get(bot.id)
   let user = await User.ensure(bot, sender.id)
 
