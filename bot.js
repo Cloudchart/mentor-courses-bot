@@ -15,7 +15,7 @@ messenger.on('message', async ({ bot, user, payload }) => {
 
 // Messenger postback handler
 //
-messenger.on('postback', (payload) => {
+messenger.on('postback', async (payload) => {
   console.log('Handling messenger payload of type "postback".')
   await bot.sendTextMessage(user, 'Echo: postback received')
 })
