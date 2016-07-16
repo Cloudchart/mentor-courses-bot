@@ -15,7 +15,11 @@ let getUpdates = (bot, callback) =>
 
 let start = () =>
   run(r.table('bots').filter({ type: 'telegram' }))
-    .then( cursor => cursor.eachAsync(({ token }) => getUpdates(new Bot(token), handleUpdates)) )
+    .then(
+      cursor => cursor.eachAsync((attributes) => {
+        getUpdates(new Bot(attributes), handleUpdates)
+      }).then(() => console.log('done')).catch(console.error)
+    )
 
 
 

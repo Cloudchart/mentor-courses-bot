@@ -27,8 +27,6 @@ export const resolve = async (user, payload) => {
   let pendingMessage = await user.query('pendingMessage', {}, true)
     .then(({ pendingMessage }) => pendingMessage)
 
-  console.log(pendingMessage, payload.message)
-
   if (!pendingMessage)
     return false
 

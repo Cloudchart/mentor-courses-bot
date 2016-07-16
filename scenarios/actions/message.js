@@ -1,6 +1,7 @@
 import invariant from 'fbjs/lib/invariant'
 
 import Action from './action'
+import { r, run } from '../../stores'
 
 
 export default class extends Action {
@@ -10,25 +11,35 @@ export default class extends Action {
 
     invariant(config.text, `Message Action error: 'text' field should be defined. Got '${config.text}'.`)
     this.text = config.text
-
-    this.resolveFn = config.resolve
-
-    this.keyboard = { ...config.keyboard }
+    this.keyboard = { buttons: [], inline: false, ...config.keyboard }
   }
 
-  async resolve({ user }, next) {
-    if (typeof this.resolveFn === 'function')
-      await this.resolveFn(user)
 
-    let message = typeof this.text === 'function' ? await this.text(user) : this.text
-    let buttons = typeof this.keyboard.buttons === 'function' ? await this.keyboard.buttons(user) : this.keyboard.buttons
-    await user.sendMessage(message, {
-      keyboard: {
-        ...this.keyboard,
-        buttons
-      }
+  async preparePayloads(context) {
+    let payloads = this.keyboard.buttons.map(async button => {
+      let id = await run(r.uuid())
+      return { id, value: button, title: button }
     })
-    next(this.next)
+
+    payloads = await Promise.all(payloads)
+
+    await run(r.table('users_bots').get(context.user_bot_record_id).update({ payloads }))
+
+    return payloads
+  }
+
+
+  async resolve(context, next) {
+    let message = typeof this.text === 'function' ? await this.text(context) : this.text
+
+    let buttons = await this.preparePayloads(context)
+
+    await context.bot.sendMessage(context.user, message, {
+      ...this.keyboard,
+      buttons
+    })
+
+    next()
   }
 
 }

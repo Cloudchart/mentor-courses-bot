@@ -3,12 +3,18 @@ import invariant from 'fbjs/lib/invariant'
 import Stores, { r, run } from '../stores'
 import Action from './action'
 
+import {
+  resolve as resolveScenario
+} from './'
+
 
 class Scenario {
 
   constructor(config) {
     invariant(config.name, `Scenario error: 'name' field should be defined.`)
     this.name = config.name
+
+    this.attributes = { ...config.attributes }
 
     invariant(
       config.actions &&
@@ -18,38 +24,61 @@ class Scenario {
     )
     this.labels   = {}
     this.actions  = this._parseActions(config.actions)
+    this.commands = { ...config.commands }
   }
 
 
-  async resolve(user, index, payload) {
-    console.log(`Resolving scenario "${this.name}" at step ${index}.`)
+  async next(context) {
+
+  }
+
+
+  async resolve(step, context) {
+    console.log(`Resolving scenario "${this.name}" at step ${step}.`)
+
+    let action = this.actions[step]
+
+    if (!action) {
+      context.route.stack.shift()
+      if (context.route.stack.length === 0)
+        context.route.stack.unshift({ scenario: this.name, step: 0 })
+      return await resolveScenario(context)
+    }
+
+    let state  = context.route.stack[0]
+
     let should_continue = false
-    let action = this.actions[index]
+    let nextStep = action._config.next || step + 1
+    let nextPayload = null
 
-    if (!action)
-      return
+    await action.resolve(context, (result = {}) => {
+      should_continue = true
+      console.log('SHOULD CONTINUE', should_continue)
 
-    await action.resolve({ user, ...payload }, (next = true) => { should_continue = next })
+      if (result.step !== null && result.step !== undefined)
+        nextStep = result.step
 
-    payload = null
+      if (result.payload !== null && result.payload !== undefined)
+        nextPayload = result.payload
+    })
 
-    let routes = await run(Stores.User.table.get(user.id)('routes').default([]))
+    state.step = step
 
-    if (routes.length === 0 || routes[routes.length - 1].name !== this.name)
-      routes.push({ name: this.name, step: index })
-    else
-      routes[routes.length - 1].step = index
-
-    await run(Stores.User.table.get(user.id).update({ routes }))
-
+    console.log(nextStep, nextPayload, should_continue)
 
     if (should_continue === false)
       return
 
-    if (should_continue === true)
-      return await this.resolve(user, index + 1, payload)
+    context.payload = nextPayload
 
-    return await this.resolve(user, this.labels[should_continue], payload)
+    let nextActionIndex = typeof nextStep === 'string'
+      ? this.labels[nextStep]
+      : nextStep
+
+    if (context.route.stack[0].scenario === this.name) {
+      return await this.resolve(nextActionIndex, context)
+    } else
+      return await resolveScenario(context)
   }
 
 
@@ -57,7 +86,7 @@ class Scenario {
     return actions.map((config, ii) => {
       if (config.label)
         this.labels[config.label] = ii
-      return Action.create(config)
+      return Action.create({ ...config, scenario: this, step: ii })
     })
   }
 

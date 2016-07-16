@@ -1,145 +1,105 @@
-import Stores, { r, run } from '../../stores'
+import { r, run } from '../../stores'
 
+export default {
 
-let nextInsight = async (user) => {
-  let courseID = Stores.User.table.get(user.id)('course')
-  let user_insights = Stores.User.table.get(user.id)('insights')('id').default([])
-  let course_insights = Stores.Course.table.get(courseID)('insights').default([])
+  name: 'card',
 
-  return run(
-    Stores.Insight.table.filter(insight => {
-      let insightID = insight('id')
-      return course_insights.contains(insightID).and(r.not(user_insights.contains(insightID)))
-    }).limit(1)
-  ).then(cursor => cursor.next())
-}
-
-
-let rateInsight = async (user, rate) =>
-  await run(
-    Stores.User.table.get(user.id)
-      .update({
-        insights: r.row('insights').default([]).append({
-          id    : r.row('insight'),
-          rate  : rate
-        }),
-        insight : null
-      })
-  )
-
-
-let currentCourse = (user) =>
-  run(Stores.Course.table.get(Stores.User.table.get(user.id)('course')))
-
-
-let currentInsight = (user) =>
-  run(Stores.Insight.table.get(Stores.User.table.get(user.id)('insight')))
-
-
-export default [
-  // Load next card
-  {
-    label     : "card-main-loop",
-    action    : "fork",
-    resolve   : async (user) => {
-      let insight = await nextInsight(user).catch(error => null)
-      if (insight)
-        await run(
-          Stores.User.table.get(user.id).update({ insight: insight.id })
-        )
-      return insight ? "ok" : "no_more"
-    },
-    forks: {
-      ok      : "show-card",
-      no_more : "no-more-cards",
+  commands: {
+    dropout: (context, next) => {
+      let { route } = context
+      route.stack.reverse().length = 1
+      return next({ payload: { status: 'dropout' } })
     }
   },
 
-  // Render card
-  {
-    label     : "show-card",
-    action    : "message",
-    text      : async (user) => {
-      let insight = await currentInsight(user)
-      return insight.content
+  actions: [
+
+    {
+      label   : 'show-card',
+      action  : 'image',
+      url     : 'https://s-media-cache-ak0.pinimg.com/236x/5b/11/c6/5b11c6b5eabb728c76b652c330ddaf8e.jpg'
     },
-    keyboard  : {
-      once    : true,
-      buttons : [['Skip', 'Save']],
-    }
-  },
 
-  // Wait for user answer
-  {
-    action    : "halt",
-
-    // commands
-    commands  : {
-      dropout : {
-        label   : 'course-drop-out',
+    {
+      action  : 'message',
+      text    : async (context) => {
+        let { card } = context.route.stack[0]
+        let insight = await run(r.table('insights').get(card))
+        return insight.content
       },
-      help    : {
-        label   : 'card-help'
+      keyboard: {
+        inline : true,
+        buttons : ['Skip', 'Save']
       }
     },
 
-    // message
-    message   : async (user, message, next) => {
-      let answer = message.trim().toLowerCase()
-
-      if (answer === 'skip') return next('card-skip')
-      if (answer === 'save') return next('card-save')
-
-      next('card-unknown-answer')
+    {
+      action  : 'input',
+      branch  : {
+        'save'  : 'save',
+        'skip'  : 'skip',
+      },
+      timeout : {
+        duration  : 1000 * 60 * 60,
+        next      : 'shall-we',
+      }
     },
 
-    next      : "show-card",
-  },
-
-  // Unknown answer
-  {
-    label     : "card-unknown-answer",
-    action    : "message",
-    text      : `I don't understand.`,
-    next      : "show-card",
-  },
-
-  // Card skip
-  {
-    label     : 'card-skip',
-    action    : 'message',
-    text      : `Ok, you've skipped it.`,
-    next      : 'card-main-loop',
-    resolve   : async (user) => await rateInsight(user, -1)
-  },
-
-  // Card save
-  {
-    label     : 'card-save',
-    action    : 'message',
-    text      : `Ok, you've saved it.`,
-    next      : 'card-main-loop',
-    resolve   : async (user) => await rateInsight(user, +1)
-  },
-
-  // No more cards, returning to core loop
-  {
-    label     : "no-more-cards",
-    action    : "message",
-    text      : `Great! You've completed this course.`,
-    next      : "core-loop",
-  },
-
-  {
-    label     : 'card-help',
-    action    : 'message',
-    text      : `
-      You can save or skip card.
-      You can type /dropout to return to core loop.
-    `,
-    keyboard  : {
-      hide    : true
+    {
+      action  : 'message',
+      text    : `I don't understand`,
+      next    : 'show-card'
     },
-    next      : 'show-card'
-  }
-]
+
+    {
+      label   : 'save',
+      action  : 'rateCard',
+      status  : 'save'
+    },
+
+    {
+      action  : 'message',
+      text    : `You saved it.`,
+      next    : 'quit'
+    },
+
+    {
+      label   : 'skip',
+      action  : 'rateCard',
+      status  : 'skip',
+    },
+
+    {
+      action  : 'message',
+      text    : 'You skipped it.',
+      next    : 'quit'
+    },
+
+    {
+      label   : 'shall-we',
+      action  : 'message',
+      text    : `
+        Do you want to quit?
+      `,
+      keyboard: {
+        inline  : true,
+        buttons : ['No', 'Yes']
+      }
+    },
+
+    {
+      action  : 'input',
+      branch  : {
+        'yes' : 'quit',
+        'no'  : 'show-card',
+      }
+    },
+
+    {
+      label   : 'quit',
+      action  : 'quit',
+    }
+
+  ]
+
+}

@@ -1,9 +1,11 @@
 {
   "plugins": [
-    "./graphql/babel-relay-plugin"
+    "transform-flow-strip-types",
+    "./graphql/babel-relay-plugin",
   ],
   "presets": [
     "es2015",
-    "stage-0"
+    "stage-0",
+    "react",
   ]
 }

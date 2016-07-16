@@ -18,7 +18,9 @@ let connect = async () => {
 
 let run = async (query) => query.run(await connect())
 
+
 export default r
+
 
 export {
   run,
