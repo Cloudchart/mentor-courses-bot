@@ -16,7 +16,13 @@ class Bot {
 
     return run(
       r.table('bots').get(id)
-    ).then(({ id, ...attributes }) => Cache[id] = new Bot(id, attributes))
+    )
+      .then(record => {
+        if (record === null || record === undefined)
+          return null
+        let { id, ...attributes } = record
+        return Cache[id] = new Bot(id, attributes)
+      })
   }
 
 
@@ -42,7 +48,7 @@ class Bot {
 
   sendTextMessage(user, text) {
     return this._request('sendMessage', null, {
-      chat_id : user.get('chat.id'),
+      chat_id : user.get('bot_user_id'),
       text    : text
     })
   }

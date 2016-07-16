@@ -30,12 +30,26 @@ const handleUpdate = async ({ id, bot, ...update }) => {
     return
   }
 
-  bot = await Bot.get(bot.id)
-  let user = await User.ensure(bot, sender.id)
+  bot_instance = await Bot.get(bot.id).catch(error => null)
+  if (!bot_instance) {
+    console.log(`Messenger bot error: cannot find bot with id '${bot.id}'.`)
+    return
+  }
+
+  if (!bot_instance.get('token')) {
+    console.log(`Messenger bot error: cannot find token for bot '${bot_instance.id}'.`)
+    return
+  }
+
+  let user_instance = await User.ensure(bot_instance, sender.id).catch(error => null)
+  if (!user_instance) {
+    console.log(`Messenger bot error: cannot find user with id '${sender.id}' for bot '${bot_instance.id}'.`)
+    return
+  }
 
   let payload = {
-    bot     : bot,
-    user    : user,
+    bot     : bot_instance,
+    user    : user_instance,
     source  : 'client',
     payload : {
       type  : event_type,
@@ -73,7 +87,7 @@ const handleUpdates = async (channel, message) => {
 
 const start = () => {
 
-  Subscriber.subscribe('facebook')
+  Subscriber.subscribe('messenger')
   Subscriber.on('message', handleUpdates)
 
   handleUpdates()

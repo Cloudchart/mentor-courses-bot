@@ -43,7 +43,7 @@ router.post('/:token', async (req, res) => {
     r.table('updates').insert(updates)
   )
 
-  publisher.publish('facebook', 'updates')
+  publisher.publish('messenger', 'updates')
 
   res.sendStatus(200)
 })
