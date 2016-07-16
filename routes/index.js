@@ -5,7 +5,11 @@ import TelegramRoutes from './telegram'
 
 let router = new Router()
 
-router.use('/facebook', FacebookRoutes)
-router.use('/telegram', TelegramRoutes)
+let bots_prefix = process.env.WEBHOOKS_PREFIX
+
+console.log(bots_prefix)
+
+router.use('/' + bots_prefix + '/facebook', FacebookRoutes)
+router.use('/' + bots_prefix + '/telegram', TelegramRoutes)
 
 export default router

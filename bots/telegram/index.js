@@ -25,7 +25,7 @@ const handleUpdates = async (channel, message) => {
 
 const start_bot = async (id) => {
   let bot = await Bot.get(id)
-  await bot.setWebhook(process.env.HOST + '/telegram').catch(error => console.error(error))
+  await bot.setWebhook(process.env.HOST + '/' + process.env.WEBHOOKS_PREFIX + '/telegram').catch(error => console.error(error))
 }
 
 
